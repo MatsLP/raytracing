@@ -6,6 +6,16 @@ struct Color {
     g: f32,
     b: f32,
 }
+
+impl Color {
+    fn ppm_string(&self) -> String {
+        let r = (self.r * 255.99999) as u8;
+        let g = (self.g * 255.99999) as u8;
+        let b = (self.b * 255.99999) as u8;
+        format!("{r} {g} {b}")
+    }
+}
+
 struct Image {
     width: usize,
     height: usize,
@@ -60,10 +70,8 @@ impl Image {
 
         for y in 0..self.height {
             for x in 0..self.width {
-                let r = (self.get(x, y).unwrap().r * 255.99999) as u8;
-                let g = (self.get(x, y).unwrap().g * 255.99999) as u8;
-                let b = (self.get(x, y).unwrap().b * 255.99999) as u8;
-                println!("{r} {g} {b}\n");
+                let c = self.get(x, y).unwrap(); 
+                println!("{}", c.ppm_string());
             }
         }
     }
