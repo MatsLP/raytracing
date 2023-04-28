@@ -82,6 +82,23 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+mod ray {
+    use crate::geo::Vec3;
+
+
+    struct Ray {
+        base : Vec3,
+        dir: Vec3,
+    }
+
+    impl Ray {
+        fn at(&self, t: f64) -> Vec3 {
+            self.base + t * self.dir
+        }
+    }
+}
+
+
 mod geo {
     use std::ops;
 
