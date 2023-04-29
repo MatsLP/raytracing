@@ -14,8 +14,8 @@ impl Scene {
     }
 }
 
-pub trait Hittable {
-    fn is_hit(&self, ray: &Ray) -> bool;
+trait Hittable {
+    fn hit(&self, ray: &Ray) -> f64;
 }
 
 struct Sphere {
@@ -24,20 +24,26 @@ struct Sphere {
 }
 
 impl Hittable for Sphere {
-    fn is_hit(&self, ray: &Ray) -> bool {
+    fn hit(&self, ray: &Ray) -> f64 {
         let oc = ray.base - self.center;
         let a = ray.dir.length_squared();
         let b = 2.0 * oc.dot(&ray.dir);
         let c = oc.length_squared() - self.radius * self.radius;
         let discriminant = b * b - 4.0 * a * c;
-        discriminant > 0.0
+        if discriminant <= 0.0 {
+            return -1.0;
+        }
+        return (-b -discriminant.sqrt()) / (2.0 * a);
     }
 }
 
 pub fn ray_color(ray: &Ray, scene: &Scene) -> Color {
     for object in scene.objects.iter() {
-        if object.is_hit(ray) {
-            return Color::of(1.0, 0.0, 0.0);
+        let t = object.hit(ray);
+        if t > 0.0 {
+            let N = (ray.at(t) - object.center).unit();
+            let normalize = |x: f64| 0.5 * (x + 1.0);
+            return Color::of(normalize(N.x), normalize(N.y), normalize(N.z));
         }
     }
     let unit = ray.dir.unit();
