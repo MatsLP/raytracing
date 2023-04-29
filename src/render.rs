@@ -1,8 +1,8 @@
-use crate::geo::Vec3;
+use crate::{geo::Vec3, scene::{Scene, ray_color}};
     
-struct Ray {
-    base: Vec3,
-    dir: Vec3,
+pub struct Ray {
+    pub base: Vec3,
+    pub dir: Vec3,
 }
 
 impl Ray {
@@ -27,7 +27,7 @@ impl Viewport {
     }
 }
 
-pub fn render(viewport: &Viewport, img: &mut Image) {
+pub fn render(viewport: &Viewport, scene: &Scene,img: &mut Image) {
     for y in 0..img.height {
         for x in 0..img.width {
             let base = Vec3::zero();
@@ -41,21 +41,13 @@ pub fn render(viewport: &Viewport, img: &mut Image) {
                 base,
                 dir
             };
-            *img.get_mut(x, y).unwrap() = ray_color(&ray);
+            *img.get_mut(x, y).unwrap() = ray_color(&ray, scene);
         }
     }
 }
 
-fn ray_color(ray: &Ray) -> Color {
-    let unit = ray.dir.unit();
-    assert!(0.9999 <= unit.length() && unit.length() <= 1.00001 );
-    let t = 0.5 * (unit.y + 1.0);
-    assert!(0.0 <= t && t <= 1.0000);
-    (1.0 - t) * Color::from(1.0, 1.0, 1.0)
-        + t * Color::from(0.5, 0.7, 1.0)
-}
 
-type Color = Vec3;
+pub type Color = Vec3;
 
 
 impl Color {
@@ -68,7 +60,7 @@ impl Color {
         let b = (self.z * 255.99999).floor() as u8;
         format!("{r} {g} {b}")
     }
-    fn from(r: f64, g: f64, b: f64) -> Self{
+    pub fn from(r: f64, g: f64, b: f64) -> Self{
         assert!(0.0 <= r && r <= 1.0);
         assert!(0.0 <= g && g <= 1.0);
         assert!(0.0 <= b && b <= 1.0);
