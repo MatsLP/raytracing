@@ -27,13 +27,13 @@ impl Hittable for Sphere {
     fn hit(&self, ray: &Ray) -> f64 {
         let oc = ray.base - self.center;
         let a = ray.dir.length_squared();
-        let b = 2.0 * oc.dot(&ray.dir);
+        let half_b = oc.dot(&ray.dir);
         let c = oc.length_squared() - self.radius * self.radius;
-        let discriminant = b * b - 4.0 * a * c;
+        let discriminant = half_b * half_b - a * c;
         if discriminant <= 0.0 {
             return -1.0;
         }
-        return (-b -discriminant.sqrt()) / (2.0 * a);
+        return (-half_b -discriminant.sqrt()) / a;
     }
 }
 
