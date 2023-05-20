@@ -27,6 +27,22 @@ struct HitRecord {
     p: Vec3,
     normal: Vec3,
     t: f64,
+    face: FACE,
+}
+
+impl HitRecord {
+    fn new(p: Vec3, t: f64, unaligned_normal: Vec3, ray_dir: Vec3) -> Self{
+        let tmp = if ray_dir.dot(&unaligned_normal) < 0.0 {
+            (FACE::FRONT, unaligned_normal)
+        } else {
+            (FACE::BACK, -unaligned_normal)
+        };
+        HitRecord { p, normal: tmp.1, t, face: tmp.0 }
+    }
+}
+
+enum FACE {
+    FRONT, BACK
 }
 
 impl Hittable for Sphere {
@@ -48,11 +64,7 @@ impl Hittable for Sphere {
             }
         }
         let p = ray.at(root);
-        Some(HitRecord {
-            p,
-            t: root,
-            normal: (p-self.center) / self.radius
-        })
+        Some(HitRecord::new(p, root, (p-self.center) / self.radius, ray.dir))
     }
 }
 
