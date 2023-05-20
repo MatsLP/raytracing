@@ -15,7 +15,7 @@ impl Scene {
 }
 
 trait Hittable {
-    fn hit(&self, ray: &Ray) -> f64;
+    fn hit(&self, ray: &Ray, tmin: f64, tmax: f64) -> Option<HitRecord>;
 }
 
 struct Sphere {
@@ -23,25 +23,46 @@ struct Sphere {
     radius: f64,
 }
 
+struct HitRecord {
+    p: Vec3,
+    normal: Vec3,
+    t: f64,
+}
+
 impl Hittable for Sphere {
-    fn hit(&self, ray: &Ray) -> f64 {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = ray.base - self.center;
         let a = ray.dir.length_squared();
         let half_b = oc.dot(&ray.dir);
         let c = oc.length_squared() - self.radius * self.radius;
         let discriminant = half_b * half_b - a * c;
         if discriminant <= 0.0 {
-            return -1.0;
+            return None;
         }
-        return (-half_b -discriminant.sqrt()) / a;
+        let sqrtd = discriminant.sqrt();
+        let mut root = (-half_b - sqrtd) / a;
+        if root < t_min || t_max < root {
+            root = (-half_b + sqrtd) / a;
+            if root < t_min || t_max < root {
+                return None;
+            }
+        }
+        let p = ray.at(root);
+        Some(HitRecord {
+            p,
+            t: root,
+            normal: (p-self.center) / self.radius
+        })
     }
 }
 
 pub fn ray_color(ray: &Ray, scene: &Scene) -> Color {
     for object in scene.objects.iter() {
-        let t = object.hit(ray);
-        if t > 0.0 {
-            let N = (ray.at(t) - object.center).unit();
+        let Some(hit_record) = object.hit(ray, f64::MIN, f64::MAX) else {
+            continue;
+        };
+        if hit_record.t > 0.0 {
+            let N = (ray.at(hit_record.t) - object.center).unit();
             let normalize = |x: f64| 0.5 * (x + 1.0);
             return Color::of(normalize(N.x), normalize(N.y), normalize(N.z));
         }
