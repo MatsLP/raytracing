@@ -1,7 +1,7 @@
 use crate::{geo::Vec3, render::{Ray, Color}};
 
 pub struct Scene {
-    objects: Vec<Sphere>,
+    objects: Vec<Object>,
 }
 
 impl Scene {
@@ -10,7 +10,20 @@ impl Scene {
     }
 
     pub fn add_sphere(&mut self, center: Vec3, radius: f64) {
-        self.objects.push(Sphere { center, radius });
+        let sphere = Sphere { center, radius };
+        self.objects.push(Object::Sphere(sphere));
+    }
+}
+
+enum Object {
+    Sphere(Sphere)
+}
+
+impl Hittable for Object {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        match self {
+            Object::Sphere(s) => s.hit(ray, t_min, t_max)
+        }
     }
 }
 
@@ -70,11 +83,12 @@ impl Hittable for Sphere {
 
 pub fn ray_color(ray: &Ray, scene: &Scene) -> Color {
     for object in scene.objects.iter() {
+
         let Some(hit_record) = object.hit(ray, f64::MIN, f64::MAX) else {
             continue;
         };
         if hit_record.t > 0.0 {
-            let N = (ray.at(hit_record.t) - object.center).unit();
+            let N = hit_record.normal;
             let normalize = |x: f64| 0.5 * (x + 1.0);
             return Color::of(normalize(N.x), normalize(N.y), normalize(N.z));
         }
