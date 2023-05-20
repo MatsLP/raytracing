@@ -84,14 +84,15 @@ impl Hittable for Sphere {
 pub fn ray_color(ray: &Ray, scene: &Scene) -> Color {
     for object in scene.objects.iter() {
 
-        let Some(hit_record) = object.hit(ray, f64::MIN, f64::MAX) else {
+        let Some(hit_record) = object.hit(ray, 0.0, f64::MAX) else {
             continue;
         };
-        if hit_record.t > 0.0 {
-            let N = hit_record.normal;
-            let normalize = |x: f64| 0.5 * (x + 1.0);
-            return Color::of(normalize(N.x), normalize(N.y), normalize(N.z));
-        }
+        let normalize = |x: f64| 0.5 * (x + 1.0);
+        return Color::of(
+            normalize(hit_record.normal.x),
+            normalize(hit_record.normal.y),
+            normalize(hit_record.normal.z)
+        );
     }
     let unit = ray.dir.unit();
     assert!(0.9999 <= unit.length() && unit.length() <= 1.00001 );
