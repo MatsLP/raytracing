@@ -54,8 +54,16 @@ impl Viewport {
 pub fn render(camera: &Camera, scene: &Scene, img: &mut Image) {
     for y in 0..img.height {
         for x in 0..img.width {
-            let ray = camera.get_ray(x as f64 / img.width as f64, y as f64 / img.height as f64);
-            *img.get_mut(x, y).unwrap() = ray_color(&ray, scene);
+            let mut color = Vec3::zero();
+            const N_SAMPLES: i32 = 100;
+            for _ in 0..N_SAMPLES {
+                let u = (x as f64 + rand::random::<f64>()) / img.width as f64;
+                let v = (y as f64 + rand::random::<f64>())/ img.height as f64;
+                let ray = camera.get_ray(u, v);
+                color += ray_color(&ray, scene);
+            }
+            
+            *img.get_mut(x, y).unwrap() = color / N_SAMPLES as f64;
         }
     }
 }
@@ -64,12 +72,10 @@ pub type Color = Vec3;
 
 impl Color {
     fn ppm_string(&self) -> String {
-        assert!(-0.0001 <= self.x && self.x <= 1.00001);
-        assert!(-0.0001 <= self.y && self.y <= 1.00001);
-        assert!(-0.0001 <= self.z && self.z <= 1.00001);
-        let r = (self.x * 255.99999).floor() as u8;
-        let g = (self.y * 255.99999).floor() as u8;
-        let b = (self.z * 255.99999).floor() as u8;
+        let clamp = |x| if x < 0.0 {0.0} else if x > 1.0 {1.0} else {x};
+        let r = (clamp(self.x) * 255.99999).floor() as u8;
+        let g = (clamp(self.y) * 255.99999).floor() as u8;
+        let b = (clamp(self.z) * 255.99999).floor() as u8;
         format!("{r} {g} {b}")
     }
     pub fn from(r: f64, g: f64, b: f64) -> Self {
