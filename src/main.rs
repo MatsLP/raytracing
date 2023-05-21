@@ -12,7 +12,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     scene.add_sphere(geo::Vec3::of(0.0, -100.5, -1.0), 100.0);
 
 
-    render::render(&render::Viewport::default(), &scene, &mut img);
+    render::render(&render::Camera::default(), &scene, &mut img);
 
     img.write_as_ppm_to_stdout();
     Ok(())

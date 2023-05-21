@@ -11,10 +11,35 @@ impl Ray {
     }
 }
 
-pub struct Viewport {
+pub struct Camera {
+    origin: Vec3,
+    viewport: Viewport
+}
+
+struct Viewport {
     base: Vec3,
     v0: Vec3,
     v1: Vec3,
+}
+
+impl Camera {
+    pub fn default() -> Self {
+        Self { origin: Vec3::zero(), viewport: Viewport::default() }
+    }
+
+    fn get_ray(&self, u: f64, v: f64) -> Ray {
+        let base = self.origin;
+        let dir = 
+            self.viewport.base 
+            + u * self.viewport.v0
+            + v * self.viewport.v1
+            - base;
+
+        Ray {
+            base,
+            dir
+        }
+    }
 }
 
 impl Viewport {
@@ -27,20 +52,12 @@ impl Viewport {
     }
 }
 
-pub fn render(viewport: &Viewport, scene: &Scene,img: &mut Image) {
+pub fn render(camera: &Camera, scene: &Scene,img: &mut Image) {
     for y in 0..img.height {
         for x in 0..img.width {
-            let base = Vec3::zero();
-            let dir = 
-                viewport.base 
-                + (x as f64 / img.width as f64) * viewport.v0
-                + (y as f64 / img.height as f64) * viewport.v1
-                - base;
-
-            let ray = Ray {
-                base,
-                dir
-            };
+            let ray = camera.get_ray(
+                x as f64 / img.width as f64,
+                y as f64 / img.height as f64);
             *img.get_mut(x, y).unwrap() = ray_color(&ray, scene);
         }
     }
