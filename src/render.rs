@@ -1,5 +1,8 @@
-use crate::{geo::Vec3, scene::{Scene, ray_color}};
-    
+use crate::{
+    geo::Vec3,
+    scene::{ray_color, Scene},
+};
+
 pub struct Ray {
     pub base: Vec3,
     pub dir: Vec3,
@@ -13,7 +16,7 @@ impl Ray {
 
 pub struct Camera {
     origin: Vec3,
-    viewport: Viewport
+    viewport: Viewport,
 }
 
 struct Viewport {
@@ -24,21 +27,17 @@ struct Viewport {
 
 impl Camera {
     pub fn default() -> Self {
-        Self { origin: Vec3::zero(), viewport: Viewport::default() }
+        Self {
+            origin: Vec3::zero(),
+            viewport: Viewport::default(),
+        }
     }
 
     fn get_ray(&self, u: f64, v: f64) -> Ray {
         let base = self.origin;
-        let dir = 
-            self.viewport.base 
-            + u * self.viewport.v0
-            + v * self.viewport.v1
-            - base;
+        let dir = self.viewport.base + u * self.viewport.v0 + v * self.viewport.v1 - base;
 
-        Ray {
-            base,
-            dir
-        }
+        Ray { base, dir }
     }
 }
 
@@ -52,20 +51,16 @@ impl Viewport {
     }
 }
 
-pub fn render(camera: &Camera, scene: &Scene,img: &mut Image) {
+pub fn render(camera: &Camera, scene: &Scene, img: &mut Image) {
     for y in 0..img.height {
         for x in 0..img.width {
-            let ray = camera.get_ray(
-                x as f64 / img.width as f64,
-                y as f64 / img.height as f64);
+            let ray = camera.get_ray(x as f64 / img.width as f64, y as f64 / img.height as f64);
             *img.get_mut(x, y).unwrap() = ray_color(&ray, scene);
         }
     }
 }
 
-
 pub type Color = Vec3;
-
 
 impl Color {
     fn ppm_string(&self) -> String {
@@ -77,11 +72,11 @@ impl Color {
         let b = (self.z * 255.99999).floor() as u8;
         format!("{r} {g} {b}")
     }
-    pub fn from(r: f64, g: f64, b: f64) -> Self{
+    pub fn from(r: f64, g: f64, b: f64) -> Self {
         assert!(0.0 <= r && r <= 1.0);
         assert!(0.0 <= g && g <= 1.0);
         assert!(0.0 <= b && b <= 1.0);
-        Color {x: r, y: g, z: b}
+        Color { x: r, y: g, z: b }
     }
 }
 
@@ -110,28 +105,14 @@ impl Image {
         Self {
             width,
             height,
-            data: vec![
-                Color::from(
-                    0.0,
-                    0.0,
-                    0.0,
-                );
-                width * height
-            ],
+            data: vec![Color::from(0.0, 0.0, 0.0,); width * height],
         }
     }
 
     pub fn test_image() -> Self {
         let width = 256;
         let height = 256;
-        let data: Vec<Color> = vec![
-            Color::from(
-                0.0,
-                0.0,
-                0.0,
-            );
-            width * height
-        ];
+        let data: Vec<Color> = vec![Color::from(0.0, 0.0, 0.0,); width * height];
         let mut img = Image {
             width,
             height,
