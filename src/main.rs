@@ -14,7 +14,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     render::render(&render::Camera::default(), &scene, &mut img);
 
-    img.write_as_ppm_to_stdout();
+    img.write_to_display_process();
     Ok(())
 }
 

@@ -1,3 +1,8 @@
+use std::{
+    io::Write,
+    process::{Command, Stdio},
+};
+
 use crate::{
     geo::Vec3,
     scene::{ray_color, Scene},
@@ -58,11 +63,11 @@ pub fn render(camera: &Camera, scene: &Scene, img: &mut Image) {
             const N_SAMPLES: i32 = 100;
             for _ in 0..N_SAMPLES {
                 let u = (x as f64 + rand::random::<f64>()) / img.width as f64;
-                let v = (y as f64 + rand::random::<f64>())/ img.height as f64;
+                let v = (y as f64 + rand::random::<f64>()) / img.height as f64;
                 let ray = camera.get_ray(u, v);
                 color += ray_color(&ray, scene);
             }
-            
+
             *img.get_mut(x, y).unwrap() = color / N_SAMPLES as f64;
         }
     }
@@ -72,7 +77,15 @@ pub type Color = Vec3;
 
 impl Color {
     fn ppm_string(&self) -> String {
-        let clamp = |x| if x < 0.0 {0.0} else if x > 1.0 {1.0} else {x};
+        let clamp = |x| {
+            if x < 0.0 {
+                0.0
+            } else if x > 1.0 {
+                1.0
+            } else {
+                x
+            }
+        };
         let r = (clamp(self.x) * 255.99999).floor() as u8;
         let g = (clamp(self.y) * 255.99999).floor() as u8;
         let b = (clamp(self.z) * 255.99999).floor() as u8;
@@ -145,5 +158,27 @@ impl Image {
                 println!("{}", c.ppm_string());
             }
         }
+    }
+
+    pub fn write_to_display_process(&self) {
+        let mut cmd = Command::new("display")
+            .stdin(Stdio::piped())
+            .spawn()
+            .expect("Failed to spawn subprocess");
+        {
+            let mut stdin = cmd.stdin.take().expect("failed to take stdin");
+
+            let line = format!("P3\n{w}\n{h}\n255\n", w = self.width, h = self.height);
+            stdin.write(line.as_bytes()).expect("ouch");
+
+            for y in 0..self.height {
+                for x in 0..self.width {
+                    let c = self.get(x, y).unwrap();
+                    let line = format!("{}\n", c.ppm_string());
+                    stdin.write(line.as_bytes()).expect("ouch");
+                }
+            }
+        }
+        cmd.wait().expect("Could not await child.");
     }
 }
