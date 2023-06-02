@@ -61,9 +61,18 @@ pub fn render(camera: &Camera, scene: &Scene, img: &mut Image) {
         for x in 0..img.width {
             let mut color = Vec3::zero();
             const N_SAMPLES: i32 = 100;
+
             for _ in 0..N_SAMPLES {
-                let u = (x as f64 + rand::random::<f64>()) / img.width as f64;
-                let v = (y as f64 + rand::random::<f64>()) / img.height as f64;
+                let x_jit;
+                let y_jit;
+                unsafe {
+                    x_jit = libc::rand();
+                    y_jit = libc::rand();
+                }
+                let x_jit = x_jit as f64 / libc::RAND_MAX as f64;
+                let y_jit = y_jit as f64 / libc::RAND_MAX as f64;
+                let u = (x as f64 + x_jit) / img.width as f64;
+                let v = (y as f64 + y_jit) / img.height as f64;
                 let ray = camera.get_ray(u, v);
                 color += ray_color(&ray, scene);
             }
