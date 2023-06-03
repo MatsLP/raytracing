@@ -21,3 +21,4 @@ fn main() -> Result<(), Box<dyn Error>> {
 mod render;
 mod geo;
 mod scene;
+mod random;

@@ -1,5 +1,7 @@
 use std::ops;
 
+use crate::random::{random_f64, random_f64_from_range};
+
 #[derive(Clone, Copy, Debug)]
 pub struct Vec3 {
     pub x: f64,
@@ -9,15 +11,39 @@ pub struct Vec3 {
 
 impl Vec3 {
     pub fn zero() -> Self {
-        return Self {
+        Self {
             x: 0.0,
             y: 0.0,
             z: 0.0,
-        };
+        }
+    }
+
+    pub fn random() -> Self {
+        Self {
+            x: random_f64(),
+            y: random_f64(),
+            z: random_f64(),
+        }
+    }
+
+    pub fn random_in_range(min: f64, max: f64) -> Self {
+        Self {
+            x: random_f64_from_range(min, max),
+            y: random_f64_from_range(min, max),
+            z: random_f64_from_range(min, max),
+        }
+    }
+
+    pub fn random_in_unit_sphere() -> Self {
+        let mut candidate = Self::random_in_range(-1.0, 1.0);
+        while candidate.length_squared() >= 1.0 {
+            candidate = Self::random_in_range(-1.0, 1.0);
+        }
+        candidate
     }
 
     pub fn of(x: f64, y: f64, z: f64) -> Self {
-        return Self { x, y, z };
+        Self { x, y, z }
     }
 
     pub fn length_squared(&self) -> f64 {
