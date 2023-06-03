@@ -5,7 +5,7 @@ use scene::Material;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let aspect_ratio = 16.0 / 9.0;
-    let image_width: usize = 400;
+    let image_width: usize = 1980;
     let image_height: usize = (image_width as f64 / aspect_ratio) as usize;
 
     let mut img = render::Image::empty(image_width, image_height);

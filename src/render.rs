@@ -1,6 +1,7 @@
 use std::{
     io::Write,
     process::{Command, Stdio},
+    thread::{self, ScopedJoinHandle},
 };
 
 use crate::{
@@ -58,19 +59,45 @@ impl Viewport {
 }
 
 pub fn render(camera: &Camera, scene: &Scene, img: &mut Image) {
-    for y in 0..img.height {
-        for x in 0..img.width {
-            let mut color = Vec3::zero();
+    const N_THREADS: usize = 4;
 
-            for _ in 0..img.samples_per_pixel {
-                let u = (x as f64 + random_f64()) / img.width as f64;
-                let v = (y as f64 + random_f64()) / img.height as f64;
-                let ray = camera.get_ray(u, v);
-                color += ray_color(&ray, scene, 0);
+    let process_row = move |col_skip: usize, img: &mut Image| {
+        for y in 0..img.height {
+            if y % N_THREADS != col_skip {
+                continue;
             }
+            for x in 0..img.width {
+                let mut color = Vec3::zero();
 
-            *img.get_mut(x, y).unwrap() = color;
+                for _ in 0..img.samples_per_pixel {
+                    let u = (x as f64 + random_f64()) / img.width as f64;
+                    let v = (y as f64 + random_f64()) / img.height as f64;
+                    let ray = camera.get_ray(u, v);
+                    color += ray_color(&ray, scene, 0);
+                }
+                *img.get_mut(x, y).unwrap() = color;
+            }
         }
+    };
+    if N_THREADS != 1 {
+        thread::scope(|s| {
+            let mut threads: Vec<ScopedJoinHandle<Image>> = vec![];
+            for i in 0..N_THREADS {
+                let j = i;
+                let f = process_row.clone();
+                let mut img = img.clone();
+                threads.push(s.spawn(move || -> Image {
+                    f(j, &mut img);
+                    img
+                }));
+            }
+            while !threads.is_empty() {
+                let computed_partial_img = threads.pop().unwrap().join().unwrap();
+                img.add(&computed_partial_img);
+            }
+        });
+    } else {
+        process_row(0, img);
     }
 }
 
@@ -78,7 +105,6 @@ pub type Color = Vec3;
 
 impl Color {
     fn ppm_string(&self, samples_per_pixel: i32) -> String {
-
         let scale = 1.0f64 / samples_per_pixel as f64;
         let scale_and_clamp = |x: f64| {
             let y = (x * scale).sqrt();
@@ -104,6 +130,7 @@ impl Color {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Image {
     width: usize,
     height: usize,
@@ -126,12 +153,19 @@ impl Image {
         return self.data.get(y * self.width + x);
     }
 
+    fn add(&mut self, rhs: &Image) {
+        let mut rhs_iter = rhs.data.iter();
+        for c in self.data.iter_mut() {
+            *c += *(rhs_iter.next().unwrap());
+        }
+    }
+
     pub fn empty(width: usize, height: usize) -> Self {
         Self {
             width,
             height,
             data: vec![Color::from(0.0, 0.0, 0.0,); width * height],
-            samples_per_pixel: 100
+            samples_per_pixel: 100,
         }
     }
 
