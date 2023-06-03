@@ -18,7 +18,7 @@ impl Scene {
         let mut closest_hit: Option<HitRecord> = None;
         let mut closest_t = f64::MAX;
         for object in self.objects.iter() {
-            let Some(hit_record) = object.hit(ray, 0.0, f64::MAX) else {
+            let Some(hit_record) = object.hit(ray, 0.001, f64::MAX) else {
                 continue;
             };
             if  hit_record.t < closest_t {
