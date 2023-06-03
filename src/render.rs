@@ -61,16 +61,15 @@ pub fn render(camera: &Camera, scene: &Scene, img: &mut Image) {
     for y in 0..img.height {
         for x in 0..img.width {
             let mut color = Vec3::zero();
-            const N_SAMPLES: i32 = 100;
 
-            for _ in 0..N_SAMPLES {
+            for _ in 0..img.samples_per_pixel {
                 let u = (x as f64 + random_f64()) / img.width as f64;
                 let v = (y as f64 + random_f64()) / img.height as f64;
                 let ray = camera.get_ray(u, v);
                 color += ray_color(&ray, scene, 0);
             }
 
-            *img.get_mut(x, y).unwrap() = color / N_SAMPLES as f64;
+            *img.get_mut(x, y).unwrap() = color;
         }
     }
 }
@@ -78,19 +77,23 @@ pub fn render(camera: &Camera, scene: &Scene, img: &mut Image) {
 pub type Color = Vec3;
 
 impl Color {
-    fn ppm_string(&self) -> String {
-        let clamp = |x| {
-            if x < 0.0 {
+    fn ppm_string(&self, samples_per_pixel: i32) -> String {
+
+        let scale = 1.0f64 / samples_per_pixel as f64;
+        let scale_and_clamp = |x: f64| {
+            let y = (x * scale).sqrt();
+            if y < 0.0 {
                 0.0
-            } else if x > 1.0 {
+            } else if y > 1.0 {
                 1.0
             } else {
-                x
+                y
             }
         };
-        let r = (clamp(self.x) * 255.99999).floor() as u8;
-        let g = (clamp(self.y) * 255.99999).floor() as u8;
-        let b = (clamp(self.z) * 255.99999).floor() as u8;
+
+        let r = (scale_and_clamp(self.x) * 255.99999).floor() as u8;
+        let g = (scale_and_clamp(self.y) * 255.99999).floor() as u8;
+        let b = (scale_and_clamp(self.z) * 255.99999).floor() as u8;
         format!("{r} {g} {b}")
     }
     pub fn from(r: f64, g: f64, b: f64) -> Self {
@@ -105,6 +108,7 @@ pub struct Image {
     width: usize,
     height: usize,
     data: Vec<Color>,
+    samples_per_pixel: i32,
 }
 
 impl Image {
@@ -127,6 +131,7 @@ impl Image {
             width,
             height,
             data: vec![Color::from(0.0, 0.0, 0.0,); width * height],
+            samples_per_pixel: 100
         }
     }
 
@@ -138,6 +143,7 @@ impl Image {
             width,
             height,
             data,
+            samples_per_pixel: 100, // HACK
         };
         for y in 0..height {
             eprintln!("lines remaining: {}", height - y);
@@ -151,13 +157,13 @@ impl Image {
         img
     }
 
-    pub fn write_as_ppm_to_stdout(&self) {
+    pub fn write_as_ppm_to_stdout(&self, samples_per_pixel: i32) {
         println!("P3\n{w}\n{h}\n255\n", w = self.width, h = self.height);
 
         for y in 0..self.height {
             for x in 0..self.width {
                 let c = self.get(x, y).unwrap();
-                println!("{}", c.ppm_string());
+                println!("{}", c.ppm_string(samples_per_pixel));
             }
         }
     }
@@ -176,7 +182,7 @@ impl Image {
             for y in 0..self.height {
                 for x in 0..self.width {
                     let c = self.get(x, y).unwrap();
-                    let line = format!("{}\n", c.ppm_string());
+                    let line = format!("{}\n", c.ppm_string(self.samples_per_pixel));
                     stdin.write(line.as_bytes()).expect("ouch");
                 }
             }
