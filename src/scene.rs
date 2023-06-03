@@ -13,6 +13,21 @@ impl Scene {
         let sphere = Sphere { center, radius };
         self.objects.push(Object::Sphere(sphere));
     }
+
+    fn closest_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        let mut closest_hit: Option<HitRecord> = None;
+        let mut closest_t = f64::MAX;
+        for object in self.objects.iter() {
+            let Some(hit_record) = object.hit(ray, 0.0, f64::MAX) else {
+                continue;
+            };
+            if  hit_record.t < closest_t {
+                closest_t = hit_record.t;
+                closest_hit = Some(hit_record);
+            }
+        }
+        closest_hit
+    }
 }
 
 enum Object {
@@ -87,21 +102,22 @@ pub fn ray_color(ray: &Ray, scene: &Scene, depth: i32) -> Color {
     if depth == MAX_BOUNCE_DEPTH {
         return Color::zero();
     }
-    for object in scene.objects.iter() {
 
-        let Some(hit_record) = object.hit(ray, 0.0, f64::MAX) else {
-            continue;
-        };
-        let target = Ray {
-            base: hit_record.p,
-            dir: hit_record.p + hit_record.normal + Vec3::random_in_unit_sphere()
-        };
-        return 0.5 * ray_color(&target, scene, depth + 1);
+    match scene.closest_hit(ray, 0.0, f64::MAX) {
+        Some(hit_record) => {
+            let target = Ray {
+                base: hit_record.p,
+                dir: hit_record.p + hit_record.normal + Vec3::random_in_unit_sphere()
+            };
+            0.5 * ray_color(&target, scene, depth + 1)
+        }
+        None => {
+            let unit = ray.dir.unit();
+            assert!(0.9999 <= unit.length() && unit.length() <= 1.00001 );
+            let t = 0.5 * (unit.y + 1.0);
+            assert!(0.0 <= t && t <= 1.0000);
+            (1.0 - t) * Color::from(1.0, 1.0, 1.0)
+                + t * Color::from(0.5, 0.7, 1.0)
+        }
     }
-    let unit = ray.dir.unit();
-    assert!(0.9999 <= unit.length() && unit.length() <= 1.00001 );
-    let t = 0.5 * (unit.y + 1.0);
-    assert!(0.0 <= t && t <= 1.0000);
-    (1.0 - t) * Color::from(1.0, 1.0, 1.0)
-        + t * Color::from(0.5, 0.7, 1.0)
 }
