@@ -67,7 +67,7 @@ pub fn render(camera: &Camera, scene: &Scene, img: &mut Image) {
                 let u = (x as f64 + random_f64()) / img.width as f64;
                 let v = (y as f64 + random_f64()) / img.height as f64;
                 let ray = camera.get_ray(u, v);
-                color += ray_color(&ray, scene);
+                color += ray_color(&ray, scene, 0);
             }
 
             *img.get_mut(x, y).unwrap() = color / N_SAMPLES as f64;

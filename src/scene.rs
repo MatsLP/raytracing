@@ -81,18 +81,22 @@ impl Hittable for Sphere {
     }
 }
 
-pub fn ray_color(ray: &Ray, scene: &Scene) -> Color {
+const MAX_BOUNCE_DEPTH: i32 = 50;
+
+pub fn ray_color(ray: &Ray, scene: &Scene, depth: i32) -> Color {
+    if depth == MAX_BOUNCE_DEPTH {
+        return Color::zero();
+    }
     for object in scene.objects.iter() {
 
         let Some(hit_record) = object.hit(ray, 0.0, f64::MAX) else {
             continue;
         };
-        let normalize = |x: f64| 0.5 * (x + 1.0);
-        return Color::of(
-            normalize(hit_record.normal.x),
-            normalize(hit_record.normal.y),
-            normalize(hit_record.normal.z)
-        );
+        let target = Ray {
+            base: hit_record.p,
+            dir: hit_record.p + hit_record.normal + Vec3::random_in_unit_sphere()
+        };
+        return 0.5 * ray_color(&target, scene, depth + 1);
     }
     let unit = ray.dir.unit();
     assert!(0.9999 <= unit.length() && unit.length() <= 1.00001 );
