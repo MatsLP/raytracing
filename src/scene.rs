@@ -47,7 +47,7 @@ enum Shape {
 
 pub enum Material {
     Lambertian { albedo: Color },
-    Metal { albedo: Color },
+    Metal { albedo: Color, fuzz: f64 },
 }
 
 impl Material {
@@ -61,12 +61,13 @@ impl Material {
                 let ray_out = Ray {base: hit_record.p, dir: scatter_direction};
                 Some(ScatterResult { ray_out, attenuation: *albedo})
             },
-            Self::Metal { albedo } => {
+            Self::Metal { albedo, fuzz } => {
                 let reflected = ray_in.dir
                     .unit()
                     .reflect(&hit_record.normal);
                 if reflected.dot(&hit_record.normal) > 0.0 {
-                    let ray_out = Ray {base: hit_record.p, dir: reflected};
+                    let dir = reflected + fuzz * Vec3::random_in_unit_sphere();
+                    let ray_out = Ray {base: hit_record.p, dir };
                     Some(ScatterResult { ray_out, attenuation: *albedo})
                 } else {
                     None
