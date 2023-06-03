@@ -12,24 +12,23 @@ impl Scene {
         Self { objects: vec![] }
     }
 
-    pub fn add_sphere(&mut self, center: Vec3, radius: f64) {
+    pub fn add_sphere(&mut self, center: Vec3, radius: f64, material: Material) {
         self.objects.push(Object {
             shape: Shape::Sphere { center, radius },
-            material: Material::Lambertian {
-                albedo: Color::random(),
-            },
+            material
         });
     }
 
     fn closest_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let mut closest_hit: Option<HitRecord> = None;
-        let mut closest_t = f64::MAX;
+        let mut closest_t_abs = f64::MAX;
         for object in self.objects.iter() {
             let Some(hit_record) = object.hit(ray, t_min, t_max) else {
                 continue;
             };
-            if hit_record.t < closest_t {
-                closest_t = hit_record.t;
+            let t_abs = hit_record.t.abs();
+            if t_abs < closest_t_abs {
+                closest_t_abs = t_abs;
                 closest_hit = Some(hit_record);
             }
         }
@@ -46,8 +45,9 @@ enum Shape {
     Sphere { center: Vec3, radius: f64 },
 }
 
-enum Material {
+pub enum Material {
     Lambertian { albedo: Color },
+    Metal { albedo: Color },
 }
 
 impl Material {
@@ -60,6 +60,18 @@ impl Material {
                 }
                 let ray_out = Ray {base: hit_record.p, dir: scatter_direction};
                 Some(ScatterResult { ray_out, attenuation: *albedo})
+            },
+            Self::Metal { albedo } => {
+                let reflected = ray_in.dir
+                    .unit()
+                    .reflect(&hit_record.normal);
+                if reflected.dot(&hit_record.normal) > 0.0 {
+                    let ray_out = Ray {base: hit_record.p, dir: reflected};
+                    Some(ScatterResult { ray_out, attenuation: *albedo})
+                } else {
+                    None
+                }
+                
             }
         }
     }
@@ -144,7 +156,7 @@ pub fn ray_color(ray: &Ray, scene: &Scene, depth: i32) -> Color {
         return Color::zero();
     }
 
-    match scene.closest_hit(ray, 0.0, f64::MAX) {
+    match scene.closest_hit(ray, 0.001, f64::MAX) {
         Some(hit_record) => {
             let scatter_result = hit_record.material.scatter(ray, &hit_record);
             match scatter_result {
