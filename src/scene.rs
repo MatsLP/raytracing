@@ -1,4 +1,7 @@
-use crate::{geo::Vec3, render::{Ray, Color}};
+use crate::{
+    geo::Vec3,
+    render::{Color, Ray},
+};
 
 pub struct Scene {
     objects: Vec<Object>,
@@ -11,7 +14,10 @@ impl Scene {
 
     pub fn add_sphere(&mut self, center: Vec3, radius: f64) {
         self.objects.push(Object {
-            shape: Shape::Sphere { center, radius }
+            shape: Shape::Sphere { center, radius },
+            material: Material::Lambertian {
+                albedo: Color::random(),
+            },
         });
     }
 
@@ -22,7 +28,7 @@ impl Scene {
             let Some(hit_record) = object.hit(ray, t_min, t_max) else {
                 continue;
             };
-            if  hit_record.t < closest_t {
+            if hit_record.t < closest_t {
                 closest_t = hit_record.t;
                 closest_hit = Some(hit_record);
             }
@@ -32,11 +38,16 @@ impl Scene {
 }
 
 struct Object {
-    shape: Shape
+    shape: Shape,
+    material: Material,
 }
 
 enum Shape {
-    Sphere{center: Vec3, radius: f64}
+    Sphere { center: Vec3, radius: f64 },
+}
+
+enum Material {
+    Lambertian { albedo: Color },
 }
 
 impl Hittable for Object {
@@ -60,7 +71,13 @@ impl Hittable for Object {
                     }
                 }
                 let p = ray.at(root);
-                Some(HitRecord::new(p, root, (p-center) / radius, ray.dir))
+                Some(HitRecord::new(
+                    p,
+                    root,
+                    (p - center) / radius,
+                    ray.dir,
+                    &self.material,
+                ))
             }
         }
     }
@@ -70,26 +87,34 @@ trait Hittable {
     fn hit(&self, ray: &Ray, tmin: f64, tmax: f64) -> Option<HitRecord>;
 }
 
-struct HitRecord {
+struct HitRecord<'a> {
     p: Vec3,
     normal: Vec3,
     t: f64,
     face: FACE,
+    material: &'a Material,
 }
 
-impl HitRecord {
-    fn new(p: Vec3, t: f64, unaligned_normal: Vec3, ray_dir: Vec3) -> Self{
+impl<'a> HitRecord<'a> {
+    fn new(p: Vec3, t: f64, unaligned_normal: Vec3, ray_dir: Vec3, material: &'a Material) -> Self {
         let tmp = if ray_dir.dot(&unaligned_normal) < 0.0 {
             (FACE::FRONT, unaligned_normal)
         } else {
             (FACE::BACK, -unaligned_normal)
         };
-        HitRecord { p, normal: tmp.1, t, face: tmp.0 }
+        HitRecord {
+            p,
+            normal: tmp.1,
+            t,
+            face: tmp.0,
+            material,
+        }
     }
 }
 
 enum FACE {
-    FRONT, BACK
+    FRONT,
+    BACK,
 }
 
 const MAX_BOUNCE_DEPTH: i32 = 50;
@@ -103,19 +128,16 @@ pub fn ray_color(ray: &Ray, scene: &Scene, depth: i32) -> Color {
         Some(hit_record) => {
             let target = Ray {
                 base: hit_record.p,
-                dir: hit_record.p 
-                    + hit_record.normal 
-                    + Vec3::random_on_unit_sphere()
+                dir: hit_record.p + hit_record.normal + Vec3::random_on_unit_sphere(),
             };
             0.5 * ray_color(&target, scene, depth + 1)
         }
         None => {
             let unit = ray.dir.unit();
-            assert!(0.9999 <= unit.length() && unit.length() <= 1.00001 );
+            assert!(0.9999 <= unit.length() && unit.length() <= 1.00001);
             let t = 0.5 * (unit.y + 1.0);
             assert!(0.0 <= t && t <= 1.0000);
-            (1.0 - t) * Color::from(1.0, 1.0, 1.0)
-                + t * Color::from(0.5, 0.7, 1.0)
+            (1.0 - t) * Color::from(1.0, 1.0, 1.0) + t * Color::from(0.5, 0.7, 1.0)
         }
     }
 }
