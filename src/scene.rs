@@ -10,15 +10,16 @@ impl Scene {
     }
 
     pub fn add_sphere(&mut self, center: Vec3, radius: f64) {
-        let sphere = Sphere { center, radius };
-        self.objects.push(Object::Sphere(sphere));
+        self.objects.push(Object {
+            shape: Shape::Sphere { center, radius }
+        });
     }
 
     fn closest_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let mut closest_hit: Option<HitRecord> = None;
         let mut closest_t = f64::MAX;
         for object in self.objects.iter() {
-            let Some(hit_record) = object.hit(ray, 0.001, f64::MAX) else {
+            let Some(hit_record) = object.hit(ray, t_min, t_max) else {
                 continue;
             };
             if  hit_record.t < closest_t {
@@ -30,25 +31,43 @@ impl Scene {
     }
 }
 
-enum Object {
-    Sphere(Sphere)
+struct Object {
+    shape: Shape
+}
+
+enum Shape {
+    Sphere{center: Vec3, radius: f64}
 }
 
 impl Hittable for Object {
     fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        match self {
-            Object::Sphere(s) => s.hit(ray, t_min, t_max)
+        match &self.shape {
+            Shape::Sphere { center, radius } => {
+                let oc = ray.base - center;
+                let a = ray.dir.length_squared();
+                let half_b = oc.dot(&ray.dir);
+                let c = oc.length_squared() - radius * radius;
+                let discriminant = half_b * half_b - a * c;
+                if discriminant <= 0.0 {
+                    return None;
+                }
+                let sqrtd = discriminant.sqrt();
+                let mut root = (-half_b - sqrtd) / a;
+                if root < t_min || t_max < root {
+                    root = (-half_b + sqrtd) / a;
+                    if root < t_min || t_max < root {
+                        return None;
+                    }
+                }
+                let p = ray.at(root);
+                Some(HitRecord::new(p, root, (p-center) / radius, ray.dir))
+            }
         }
     }
 }
 
 trait Hittable {
     fn hit(&self, ray: &Ray, tmin: f64, tmax: f64) -> Option<HitRecord>;
-}
-
-struct Sphere {
-    center: Vec3,
-    radius: f64,
 }
 
 struct HitRecord {
@@ -71,29 +90,6 @@ impl HitRecord {
 
 enum FACE {
     FRONT, BACK
-}
-
-impl Hittable for Sphere {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        let oc = ray.base - self.center;
-        let a = ray.dir.length_squared();
-        let half_b = oc.dot(&ray.dir);
-        let c = oc.length_squared() - self.radius * self.radius;
-        let discriminant = half_b * half_b - a * c;
-        if discriminant <= 0.0 {
-            return None;
-        }
-        let sqrtd = discriminant.sqrt();
-        let mut root = (-half_b - sqrtd) / a;
-        if root < t_min || t_max < root {
-            root = (-half_b + sqrtd) / a;
-            if root < t_min || t_max < root {
-                return None;
-            }
-        }
-        let p = ray.at(root);
-        Some(HitRecord::new(p, root, (p-self.center) / self.radius, ray.dir))
-    }
 }
 
 const MAX_BOUNCE_DEPTH: i32 = 50;
