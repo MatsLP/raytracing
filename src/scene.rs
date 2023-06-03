@@ -107,7 +107,9 @@ pub fn ray_color(ray: &Ray, scene: &Scene, depth: i32) -> Color {
         Some(hit_record) => {
             let target = Ray {
                 base: hit_record.p,
-                dir: hit_record.p + hit_record.normal + Vec3::random_in_unit_sphere()
+                dir: hit_record.p 
+                    + hit_record.normal 
+                    + Vec3::random_on_unit_sphere()
             };
             0.5 * ray_color(&target, scene, depth + 1)
         }

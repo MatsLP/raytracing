@@ -42,6 +42,10 @@ impl Vec3 {
         candidate
     }
 
+    pub fn random_on_unit_sphere() -> Self {
+        Self::random_in_unit_sphere().unit()
+    }
+
     pub fn of(x: f64, y: f64, z: f64) -> Self {
         Self { x, y, z }
     }
