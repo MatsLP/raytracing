@@ -50,6 +50,26 @@ enum Material {
     Lambertian { albedo: Color },
 }
 
+impl Material {
+    fn scatter(&self, ray_in: &Ray, hit_record: &HitRecord) -> Option<ScatterResult> {
+        match self {
+            Self::Lambertian { albedo } => {
+                let mut scatter_direction = hit_record.normal + Vec3::random_on_unit_sphere();
+                if scatter_direction.near_zero() {
+                    scatter_direction = hit_record.normal;
+                }
+                let ray_out = Ray {base: hit_record.p, dir: scatter_direction};
+                Some(ScatterResult { ray_out, attenuation: *albedo})
+            }
+        }
+    }
+}
+
+struct ScatterResult {
+    ray_out: Ray,
+    attenuation: Color
+}
+
 impl Hittable for Object {
     fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         match &self.shape {
@@ -126,11 +146,13 @@ pub fn ray_color(ray: &Ray, scene: &Scene, depth: i32) -> Color {
 
     match scene.closest_hit(ray, 0.0, f64::MAX) {
         Some(hit_record) => {
-            let target = Ray {
-                base: hit_record.p,
-                dir: hit_record.p + hit_record.normal + Vec3::random_on_unit_sphere(),
-            };
-            0.5 * ray_color(&target, scene, depth + 1)
+            let scatter_result = hit_record.material.scatter(ray, &hit_record);
+            match scatter_result {
+                Some(scatter_result) => {
+                    scatter_result.attenuation * ray_color(&scatter_result.ray_out, scene, depth + 1)
+                }
+                None => Color::zero()
+            }
         }
         None => {
             let unit = ray.dir.unit();

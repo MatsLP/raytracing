@@ -73,6 +73,12 @@ impl Vec3 {
     pub fn unit(&self) -> Self {
         self / self.length()
     }
+
+    pub fn near_zero(&self) -> bool {
+        return self.x.abs() < 1.0e-8
+            && self.y.abs() < 1.0e-8
+            && self.z.abs() < 1.0e-8;
+    }
 }
 
 impl ops::AddAssign<Vec3> for Vec3 {
@@ -155,6 +161,18 @@ impl ops::Mul<Vec3> for f64 {
             x: rhs.x * self,
             y: rhs.y * self,
             z: rhs.z * self,
+        }
+    }
+}
+
+impl ops::Mul<Vec3> for Vec3 {
+    type Output = Vec3;
+
+    fn mul(self, rhs: Vec3) -> Self::Output {
+        Vec3 {
+            x: rhs.x * self.x,
+            y: rhs.y * self.y,
+            z: rhs.z * self.z,
         }
     }
 }
