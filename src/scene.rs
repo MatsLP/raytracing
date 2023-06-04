@@ -12,16 +12,16 @@ impl Scene {
         Self { objects: vec![] }
     }
 
-    pub fn add_sphere(&mut self, center: Vec3, radius: f64, material: Material) {
+    pub fn add_sphere(&mut self, center: Vec3, radius: f32, material: Material) {
         self.objects.push(Object {
             shape: Shape::Sphere { center, radius },
             material,
         });
     }
 
-    fn closest_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn closest_hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let mut closest_hit: Option<HitRecord> = None;
-        let mut closest_t_abs = f64::MAX;
+        let mut closest_t_abs = f32::MAX;
         for object in self.objects.iter() {
             let Some(hit_record) = object.hit(ray, t_min, t_max) else {
                 continue;
@@ -42,14 +42,14 @@ struct Object {
 }
 
 enum Shape {
-    Sphere { center: Vec3, radius: f64 },
+    Sphere { center: Vec3, radius: f32 },
 }
 
 #[derive(Debug, Clone, Copy)]
 pub enum Material {
     Lambertian { albedo: Color },
-    Metal { albedo: Color, fuzz: f64 },
-    Dieletric { index_of_refraction: f64 },
+    Metal { albedo: Color, fuzz: f32 },
+    Dieletric { index_of_refraction: f32 },
 }
 
 impl Material {
@@ -93,7 +93,7 @@ impl Material {
                 let unit_direction = ray_in.dir.unit();
                 let cos_theta = (-unit_direction)
                     .dot(&hit_record.normal)
-                    .min(1.0f64);
+                    .min(1.0);
                 let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
                 let dir = if refraction_ratio * sin_theta > 1.0 {
                     unit_direction.reflect(&hit_record.normal)
@@ -114,7 +114,7 @@ struct ScatterResult {
 }
 
 impl Hittable for Object {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         match &self.shape {
             Shape::Sphere { center, radius } => {
                 let oc = ray.base - center;
@@ -147,19 +147,19 @@ impl Hittable for Object {
 }
 
 trait Hittable {
-    fn hit(&self, ray: &Ray, tmin: f64, tmax: f64) -> Option<HitRecord>;
+    fn hit(&self, ray: &Ray, tmin: f32, tmax: f32) -> Option<HitRecord>;
 }
 
 struct HitRecord<'a> {
     p: Vec3,
     normal: Vec3,
-    t: f64,
+    t: f32,
     face: FACE,
     material: &'a Material,
 }
 
 impl<'a> HitRecord<'a> {
-    fn new(p: Vec3, t: f64, unaligned_normal: Vec3, ray_dir: Vec3, material: &'a Material) -> Self {
+    fn new(p: Vec3, t: f32, unaligned_normal: Vec3, ray_dir: Vec3, material: &'a Material) -> Self {
         let tmp = if ray_dir.dot(&unaligned_normal) < 0.0 {
             (FACE::FRONT, unaligned_normal)
         } else {
@@ -187,7 +187,7 @@ pub fn ray_color(ray: &Ray, scene: &Scene, depth: i32) -> Color {
         return Color::zero();
     }
 
-    match scene.closest_hit(ray, 0.001, f64::MAX) {
+    match scene.closest_hit(ray, 0.001, f32::MAX) {
         Some(hit_record) => {
             let scatter_result = hit_record.material.scatter(ray, &hit_record);
             match scatter_result {

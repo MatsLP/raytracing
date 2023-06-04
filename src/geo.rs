@@ -1,12 +1,12 @@
 use std::ops;
 
-use crate::random::{random_f64, random_f64_from_range};
+use crate::random::{random_f32, random_f32_from_range};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Vec3 {
-    pub x: f64,
-    pub y: f64,
-    pub z: f64,
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
 }
 
 impl Vec3 {
@@ -20,17 +20,17 @@ impl Vec3 {
 
     pub fn random() -> Self {
         Self {
-            x: random_f64(),
-            y: random_f64(),
-            z: random_f64(),
+            x: random_f32(),
+            y: random_f32(),
+            z: random_f32(),
         }
     }
 
-    pub fn random_in_range(min: f64, max: f64) -> Self {
+    pub fn random_in_range(min: f32, max: f32) -> Self {
         Self {
-            x: random_f64_from_range(min, max),
-            y: random_f64_from_range(min, max),
-            z: random_f64_from_range(min, max),
+            x: random_f32_from_range(min, max),
+            y: random_f32_from_range(min, max),
+            z: random_f32_from_range(min, max),
         }
     }
 
@@ -46,19 +46,19 @@ impl Vec3 {
         Self::random_in_unit_sphere().unit()
     }
 
-    pub fn of(x: f64, y: f64, z: f64) -> Self {
+    pub fn of(x: f32, y: f32, z: f32) -> Self {
         Self { x, y, z }
     }
 
-    pub fn length_squared(&self) -> f64 {
+    pub fn length_squared(&self) -> f32 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
 
-    pub fn length(&self) -> f64 {
+    pub fn length(&self) -> f32 {
         self.length_squared().sqrt()
     }
 
-    pub fn dot(&self, rhs: &Self) -> f64 {
+    pub fn dot(&self, rhs: &Self) -> f32 {
         self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
     }
 
@@ -71,11 +71,11 @@ impl Vec3 {
     }
 
     pub fn reflect(&self, unit_normal: &Vec3) -> Vec3 {
-        self - 2.0f64 * self.dot(unit_normal) * unit_normal
+        self - 2.0f32 * self.dot(unit_normal) * unit_normal
     }
 
-    pub fn refract(&self, unit_normal: &Vec3, etai_over_etat: f64) -> Vec3 {
-        let cos_theta = f64::min((-self).dot(unit_normal), 1.0);
+    pub fn refract(&self, unit_normal: &Vec3, etai_over_etat: f32) -> Vec3 {
+        let cos_theta = f32::min((-self).dot(unit_normal), 1.0);
         let r_out_perp = etai_over_etat * (self + cos_theta * unit_normal);
         let r_out_parallel = -(1.0 - r_out_perp.length_squared()).abs().sqrt() * unit_normal;
         r_out_perp + r_out_parallel
@@ -122,16 +122,16 @@ impl ops::Neg for &Vec3 {
     }
 }
 
-impl ops::MulAssign<f64> for Vec3 {
-    fn mul_assign(&mut self, rhs: f64) {
+impl ops::MulAssign<f32> for Vec3 {
+    fn mul_assign(&mut self, rhs: f32) {
         self.x *= rhs;
         self.y *= rhs;
         self.z *= rhs;
     }
 }
 
-impl ops::DivAssign<f64> for Vec3 {
-    fn div_assign(&mut self, rhs: f64) {
+impl ops::DivAssign<f32> for Vec3 {
+    fn div_assign(&mut self, rhs: f32) {
         self.x /= rhs;
         self.y /= rhs;
         self.z /= rhs;
@@ -198,7 +198,7 @@ impl ops::Sub<Vec3> for &Vec3 {
     }
 }
 
-impl ops::Mul<Vec3> for f64 {
+impl ops::Mul<Vec3> for f32 {
     type Output = Vec3;
 
     fn mul(self, rhs: Vec3) -> Self::Output {
@@ -210,7 +210,7 @@ impl ops::Mul<Vec3> for f64 {
     }
 }
 
-impl ops::Mul<Vec3> for &f64 {
+impl ops::Mul<Vec3> for &f32 {
     type Output = Vec3;
 
     fn mul(self, rhs: Vec3) -> Self::Output {
@@ -222,7 +222,7 @@ impl ops::Mul<Vec3> for &f64 {
     }
 }
 
-impl ops::Mul<&Vec3> for f64 {
+impl ops::Mul<&Vec3> for f32 {
     type Output = Vec3;
 
     fn mul(self, rhs: &Vec3) -> Self::Output {
@@ -246,10 +246,10 @@ impl ops::Mul<Vec3> for Vec3 {
     }
 }
 
-impl ops::Div<f64> for &Vec3 {
+impl ops::Div<f32> for &Vec3 {
     type Output = Vec3;
 
-    fn div(self, rhs: f64) -> Self::Output {
+    fn div(self, rhs: f32) -> Self::Output {
         Vec3 {
             x: self.x / rhs,
             y: self.y / rhs,
@@ -258,10 +258,10 @@ impl ops::Div<f64> for &Vec3 {
     }
 }
 
-impl ops::Div<f64> for Vec3 {
+impl ops::Div<f32> for Vec3 {
     type Output = Vec3;
 
-    fn div(self, rhs: f64) -> Self::Output {
+    fn div(self, rhs: f32) -> Self::Output {
         Vec3 {
             x: self.x / rhs,
             y: self.y / rhs,
@@ -270,10 +270,10 @@ impl ops::Div<f64> for Vec3 {
     }
 }
 
-impl ops::Div<&f64> for Vec3 {
+impl ops::Div<&f32> for Vec3 {
     type Output = Vec3;
 
-    fn div(self, rhs: &f64) -> Self::Output {
+    fn div(self, rhs: &f32) -> Self::Output {
         Vec3 {
             x: self.x / rhs,
             y: self.y / rhs,

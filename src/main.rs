@@ -19,7 +19,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         albedo: Color::of(0.1, 0.2, 0.5),
     };
     let material_left = Material::Dieletric { 
-        index_of_refraction: 1.5f64
+        index_of_refraction: 1.5
     };
     let material_right = Material::Metal {
         albedo: Color::of(0.8, 0.6, 0.2),

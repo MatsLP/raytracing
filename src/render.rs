@@ -6,7 +6,7 @@ use std::{
 
 use crate::{
     geo::Vec3,
-    random::random_f64,
+    random::random_f32,
     scene::{ray_color, Scene},
 };
 
@@ -16,7 +16,7 @@ pub struct Ray {
 }
 
 impl Ray {
-    pub fn at(&self, t: f64) -> Vec3 {
+    pub fn at(&self, t: f32) -> Vec3 {
         self.base + t * self.dir
     }
 }
@@ -40,7 +40,7 @@ impl Camera {
         }
     }
 
-    fn get_ray(&self, u: f64, v: f64) -> Ray {
+    fn get_ray(&self, u: f32, v: f32) -> Ray {
         let base = self.origin;
         let dir = self.viewport.base + u * self.viewport.v0 + v * self.viewport.v1 - base;
 
@@ -70,8 +70,8 @@ pub fn render(camera: &Camera, scene: &Scene, img: &mut Image) {
                 let mut color = Vec3::zero();
 
                 for _ in 0..img.samples_per_pixel {
-                    let u = (x as f64 + random_f64()) / img.width as f64;
-                    let v = (y as f64 + random_f64()) / img.height as f64;
+                    let u = (x as f32 + random_f32()) / img.width as f32;
+                    let v = (y as f32 + random_f32()) / img.height as f32;
                     let ray = camera.get_ray(u, v);
                     color += ray_color(&ray, scene, 0);
                 }
@@ -105,8 +105,8 @@ pub type Color = Vec3;
 
 impl Color {
     fn ppm_string(&self, samples_per_pixel: i32) -> String {
-        let scale = 1.0f64 / samples_per_pixel as f64;
-        let scale_and_clamp = |x: f64| {
+        let scale = 1.0f32 / samples_per_pixel as f32;
+        let scale_and_clamp = |x: f32| {
             let y = (x * scale).sqrt();
             if y < 0.0 {
                 0.0
@@ -176,9 +176,9 @@ impl Image {
         for y in 0..height {
             eprintln!("lines remaining: {}", height - y);
             for x in 0..width {
-                let r = y as f64 / (width - 1) as f64;
-                let g = x as f64 / (height - 1) as f64;
-                let b = 0.25 as f64;
+                let r = y as f32 / (width - 1) as f32;
+                let g = x as f32 / (height - 1) as f32;
+                let b = 0.25 as f32;
                 *img.get_mut(x, y).unwrap() = Color::of(r, g, b);
             }
         }
