@@ -15,7 +15,7 @@ impl Scene {
     pub fn add_sphere(&mut self, center: Vec3, radius: f64, material: Material) {
         self.objects.push(Object {
             shape: Shape::Sphere { center, radius },
-            material
+            material,
         });
     }
 
@@ -58,21 +58,30 @@ impl Material {
                 if scatter_direction.near_zero() {
                     scatter_direction = hit_record.normal;
                 }
-                let ray_out = Ray {base: hit_record.p, dir: scatter_direction};
-                Some(ScatterResult { ray_out, attenuation: *albedo})
-            },
+                let ray_out = Ray {
+                    base: hit_record.p,
+                    dir: scatter_direction,
+                };
+                Some(ScatterResult {
+                    ray_out,
+                    attenuation: *albedo,
+                })
+            }
             Self::Metal { albedo, fuzz } => {
-                let reflected = ray_in.dir
-                    .unit()
-                    .reflect(&hit_record.normal);
+                let reflected = ray_in.dir.unit().reflect(&hit_record.normal);
                 if reflected.dot(&hit_record.normal) > 0.0 {
                     let dir = reflected + fuzz * Vec3::random_in_unit_sphere();
-                    let ray_out = Ray {base: hit_record.p, dir };
-                    Some(ScatterResult { ray_out, attenuation: *albedo})
+                    let ray_out = Ray {
+                        base: hit_record.p,
+                        dir,
+                    };
+                    Some(ScatterResult {
+                        ray_out,
+                        attenuation: *albedo,
+                    })
                 } else {
                     None
                 }
-                
             }
         }
     }
@@ -80,7 +89,7 @@ impl Material {
 
 struct ScatterResult {
     ray_out: Ray,
-    attenuation: Color
+    attenuation: Color,
 }
 
 impl Hittable for Object {
@@ -162,9 +171,10 @@ pub fn ray_color(ray: &Ray, scene: &Scene, depth: i32) -> Color {
             let scatter_result = hit_record.material.scatter(ray, &hit_record);
             match scatter_result {
                 Some(scatter_result) => {
-                    scatter_result.attenuation * ray_color(&scatter_result.ray_out, scene, depth + 1)
+                    scatter_result.attenuation
+                        * ray_color(&scatter_result.ray_out, scene, depth + 1)
                 }
-                None => Color::zero()
+                None => Color::zero(),
             }
         }
         None => {
