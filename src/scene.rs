@@ -203,7 +203,7 @@ pub fn ray_color(ray: &Ray, scene: &Scene, depth: i32) -> Color {
             assert!(0.9999 <= unit.length() && unit.length() <= 1.00001);
             let t = 0.5 * (unit.y + 1.0);
             assert!(0.0 <= t && t <= 1.0000);
-            (1.0 - t) * Color::from(1.0, 1.0, 1.0) + t * Color::from(0.5, 0.7, 1.0)
+            (1.0 - t) * Color::of(1.0, 1.0, 1.0) + t * Color::of(0.5, 0.7, 1.0)
         }
     }
 }

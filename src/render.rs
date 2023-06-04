@@ -122,12 +122,6 @@ impl Color {
         let b = (scale_and_clamp(self.z) * 255.99999).floor() as u8;
         format!("{r} {g} {b}")
     }
-    pub fn from(r: f64, g: f64, b: f64) -> Self {
-        assert!(0.0 <= r && r <= 1.0);
-        assert!(0.0 <= g && g <= 1.0);
-        assert!(0.0 <= b && b <= 1.0);
-        Color { x: r, y: g, z: b }
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -164,7 +158,7 @@ impl Image {
         Self {
             width,
             height,
-            data: vec![Color::from(0.0, 0.0, 0.0,); width * height],
+            data: vec![Color::of(0.0, 0.0, 0.0,); width * height],
             samples_per_pixel: 100,
         }
     }
@@ -172,7 +166,7 @@ impl Image {
     pub fn test_image() -> Self {
         let width = 256;
         let height = 256;
-        let data: Vec<Color> = vec![Color::from(0.0, 0.0, 0.0,); width * height];
+        let data: Vec<Color> = vec![Color::of(0.0, 0.0, 0.0,); width * height];
         let mut img = Image {
             width,
             height,
@@ -185,7 +179,7 @@ impl Image {
                 let r = y as f64 / (width - 1) as f64;
                 let g = x as f64 / (height - 1) as f64;
                 let b = 0.25 as f64;
-                *img.get_mut(x, y).unwrap() = Color::from(r, g, b);
+                *img.get_mut(x, y).unwrap() = Color::of(r, g, b);
             }
         }
         img
