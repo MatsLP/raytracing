@@ -74,6 +74,13 @@ impl Vec3 {
         self - 2.0f64 * self.dot(unit_normal) * unit_normal
     }
 
+    pub fn refract(&self, unit_normal: &Vec3, etai_over_etat: f64) -> Vec3{
+        let cos_theta = f64::min((-self).dot(unit_normal), 1.0);
+        let r_out_perp = etai_over_etat * (self + cos_theta * unit_normal);
+        let r_out_parallel = -(1.0 - r_out_perp.length_squared()).abs().sqrt() * unit_normal;
+        r_out_perp + r_out_parallel
+    }
+
     pub fn unit(&self) -> Self {
         self / self.length()
     }
@@ -105,6 +112,18 @@ impl ops::Neg for Vec3 {
     }
 }
 
+impl ops::Neg for &Vec3 {
+    type Output = Vec3;
+
+    fn neg(self) -> Self::Output {
+        Vec3 {
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
+        }
+    }
+}
+
 impl ops::MulAssign<f64> for Vec3 {
     fn mul_assign(&mut self, rhs: f64) {
         self.x *= rhs;
@@ -122,6 +141,18 @@ impl ops::DivAssign<f64> for Vec3 {
 }
 
 impl ops::Add<Vec3> for Vec3 {
+    type Output = Vec3;
+
+    fn add(self, rhs: Vec3) -> Self::Output {
+        Vec3 {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+            z: self.z + rhs.z,
+        }
+    }
+}
+
+impl ops::Add<Vec3> for &Vec3 {
     type Output = Vec3;
 
     fn add(self, rhs: Vec3) -> Self::Output {
