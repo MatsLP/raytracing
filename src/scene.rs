@@ -45,9 +45,11 @@ enum Shape {
     Sphere { center: Vec3, radius: f64 },
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum Material {
     Lambertian { albedo: Color },
     Metal { albedo: Color, fuzz: f64 },
+    Dieletric { index_of_refraction: f64 },
 }
 
 impl Material {
@@ -82,6 +84,25 @@ impl Material {
                 } else {
                     None
                 }
+            }
+            Self::Dieletric { index_of_refraction } => {
+                let refraction_ratio = match hit_record.face {
+                    FACE::FRONT => 1.0 / index_of_refraction,
+                    FACE::BACK => *index_of_refraction,
+                };
+                let unit_direction = ray_in.dir.unit();
+                let cos_theta = (-unit_direction)
+                    .dot(&hit_record.normal)
+                    .min(1.0f64);
+                let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
+                let dir = if refraction_ratio * sin_theta > 1.0 {
+                    unit_direction.reflect(&hit_record.normal)
+                } else {
+                    unit_direction.refract(&hit_record.normal, refraction_ratio)
+                };
+
+                let ray_out = Ray {base: hit_record.p, dir};
+                Some(ScatterResult { ray_out, attenuation: Color::of(1.0, 1.0, 1.0) })
             }
         }
     }

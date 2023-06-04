@@ -5,7 +5,7 @@ use scene::Material;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let aspect_ratio = 16.0 / 9.0;
-    let image_width: usize = 1980;
+    let image_width: usize = 600;
     let image_height: usize = (image_width as f64 / aspect_ratio) as usize;
 
     let mut img = render::Image::empty(image_width, image_height);
@@ -16,11 +16,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         albedo: Color::of(0.8, 0.8, 0.0),
     };
     let material_center = Material::Lambertian {
-        albedo: Color::of(0.7, 0.3, 0.3),
+        albedo: Color::of(0.1, 0.2, 0.5),
     };
-    let material_left = Material::Metal {
-        albedo: Color::of(0.8, 0.8, 0.8),
-        fuzz: 0.3,
+    let material_left = Material::Dieletric { 
+        index_of_refraction: 1.5f64
     };
     let material_right = Material::Metal {
         albedo: Color::of(0.8, 0.6, 0.2),
@@ -30,6 +29,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     scene.add_sphere(geo::Vec3::of(0.0, -100.5, -1.0), 100.0, material_ground);
     scene.add_sphere(geo::Vec3::of(0.0, 0.0, -1.0), 0.5, material_center);
     scene.add_sphere(geo::Vec3::of(-1.0, 0.0, -1.0), 0.5, material_left);
+    scene.add_sphere(geo::Vec3::of(-1.0, 0.0, -1.0), -0.4, material_left);
     scene.add_sphere(geo::Vec3::of(1.0, 0.0, -1.0), 0.5, material_right);
 
     render::render(&render::Camera::default(), &scene, &mut img);
