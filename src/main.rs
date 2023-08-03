@@ -34,7 +34,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     render::render(&render::Camera::default(), &scene, &mut img);
 
-    img.write_to_display_process();
+    img.write_to_display_process()?;
     Ok(())
 }
 

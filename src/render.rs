@@ -1,7 +1,7 @@
 use std::{
-    io::Write,
+    io::{Write},
     process::{Command, Stdio},
-    thread::{self, ScopedJoinHandle},
+    thread::{self, ScopedJoinHandle}, error::Error, fmt::Display,
 };
 
 use crate::{
@@ -91,8 +91,8 @@ pub fn render(camera: &Camera, scene: &Scene, img: &mut Image) {
                     img
                 }));
             }
-            while !threads.is_empty() {
-                let computed_partial_img = threads.pop().unwrap().join().unwrap();
+            for join_handle in threads {
+                let computed_partial_img = join_handle.join().expect("These threads can not panic.");
                 img.add(&computed_partial_img);
             }
         });
@@ -196,25 +196,49 @@ impl Image {
         }
     }
 
-    pub fn write_to_display_process(&self) {
+    pub fn write_to_display_process(&self) -> Result<(), SubprocessError> {
         let mut cmd = Command::new("display")
             .stdin(Stdio::piped())
-            .spawn()
-            .expect("Failed to spawn subprocess");
+            .spawn()?;
         {
-            let mut stdin = cmd.stdin.take().expect("failed to take stdin");
+            let mut stdin = cmd.stdin.take().expect("stdin is configured");
 
             let line = format!("P3\n{w}\n{h}\n255\n", w = self.width, h = self.height);
-            stdin.write(line.as_bytes()).expect("ouch");
+            stdin.write(line.as_bytes())?;
 
             for y in 0..self.height {
                 for x in 0..self.width {
                     let c = self.get(x, y).unwrap();
                     let line = format!("{}\n", c.ppm_string(self.samples_per_pixel));
-                    stdin.write(line.as_bytes()).expect("ouch");
+                    stdin.write(line.as_bytes())?;
                 }
             }
         }
-        cmd.wait().expect("Could not await child.");
+        cmd.wait()?;
+        Ok(())
+    }
+}
+
+impl From<std::io::Error> for SubprocessError {
+    fn from(value: std::io::Error) -> Self {
+        Self { cause: Box::new(value) }
+    }
+}
+
+
+#[derive(Debug)]
+pub struct SubprocessError {
+    cause: Box<dyn Error + 'static>
+}
+
+impl Error for SubprocessError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        None
+    }
+}
+
+impl Display for SubprocessError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        todo!()
     }
 }
