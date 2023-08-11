@@ -6,7 +6,7 @@ use std::{
 
 use crate::{
     geo::Vec3,
-    random::random_f32,
+    random::{MyRng, MySmallRng},
     scene::{ray_color, Scene},
 };
 
@@ -62,6 +62,8 @@ pub fn render(camera: &Camera, scene: &Scene, img: &mut Image) {
     const N_THREADS: usize = 4;
 
     let process_row = move |col_skip: usize, img: &mut Image| {
+        let mut rng = MySmallRng::new();
+
         for y in 0..img.height {
             if y % N_THREADS != col_skip {
                 continue;
@@ -70,10 +72,10 @@ pub fn render(camera: &Camera, scene: &Scene, img: &mut Image) {
                 let mut color = Vec3::zero();
 
                 for _ in 0..img.samples_per_pixel {
-                    let u = (x as f32 + random_f32()) / img.width as f32;
-                    let v = (y as f32 + random_f32()) / img.height as f32;
+                    let u = (x as f32 + rng.random_f32()) / img.width as f32;
+                    let v = (y as f32 + rng.random_f32()) / img.height as f32;
                     let ray = camera.get_ray(u, v);
-                    color += ray_color(&ray, scene, 0);
+                    color += ray_color(&ray, scene, 0, &mut rng);
                 }
                 *img.get_mut(x, y).unwrap() = color;
             }

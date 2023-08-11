@@ -1,6 +1,6 @@
 use crate::{
     geo::Vec3,
-    render::{Color, Ray},
+    render::{Color, Ray}, random::MyRng,
 };
 
 pub struct Scene {
@@ -53,10 +53,10 @@ pub enum Material {
 }
 
 impl Material {
-    fn scatter(&self, ray_in: &Ray, hit_record: &HitRecord) -> Option<ScatterResult> {
+    fn scatter(&self, ray_in: &Ray, hit_record: &HitRecord, rng: &mut impl MyRng) -> Option<ScatterResult> {
         match self {
             Self::Lambertian { albedo } => {
-                let mut scatter_direction = hit_record.normal + Vec3::random_on_unit_sphere();
+                let mut scatter_direction = hit_record.normal + Vec3::random_on_unit_sphere(rng);
                 if scatter_direction.near_zero() {
                     scatter_direction = hit_record.normal;
                 }
@@ -72,7 +72,7 @@ impl Material {
             Self::Metal { albedo, fuzz } => {
                 let reflected = ray_in.dir.unit().reflect(&hit_record.normal);
                 if reflected.dot(&hit_record.normal) > 0.0 {
-                    let dir = reflected + fuzz * Vec3::random_in_unit_sphere();
+                    let dir = reflected + fuzz * Vec3::random_in_unit_sphere(rng);
                     let ray_out = Ray {
                         base: hit_record.p,
                         dir,
@@ -182,18 +182,18 @@ enum FACE {
 
 const MAX_BOUNCE_DEPTH: i32 = 50;
 
-pub fn ray_color(ray: &Ray, scene: &Scene, depth: i32) -> Color {
+pub fn ray_color(ray: &Ray, scene: &Scene, depth: i32, rng: &mut impl MyRng) -> Color {
     if depth == MAX_BOUNCE_DEPTH {
         return Color::zero();
     }
 
     match scene.closest_hit(ray, 0.001, f32::MAX) {
         Some(hit_record) => {
-            let scatter_result = hit_record.material.scatter(ray, &hit_record);
+            let scatter_result = hit_record.material.scatter(ray, &hit_record, rng);
             match scatter_result {
                 Some(scatter_result) => {
                     scatter_result.attenuation
-                        * ray_color(&scatter_result.ray_out, scene, depth + 1)
+                        * ray_color(&scatter_result.ray_out, scene, depth + 1, rng)
                 }
                 None => Color::zero(),
             }

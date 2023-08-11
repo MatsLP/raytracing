@@ -1,6 +1,6 @@
 use std::ops;
 
-use crate::random::{random_f32, random_f32_from_range};
+use crate::random::MyRng;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Vec3 {
@@ -20,35 +20,35 @@ impl Vec3 {
     }
 
     #[inline(always)]
-    pub fn random() -> Self {
+    pub fn random(rng: &mut impl MyRng) -> Self {
         Self {
-            x: random_f32(),
-            y: random_f32(),
-            z: random_f32(),
+            x: rng.random_f32(),
+            y: rng.random_f32(),
+            z: rng.random_f32(),
         }
     }
 
     #[inline(always)]
-    pub fn random_in_range(min: f32, max: f32) -> Self {
+    pub fn random_in_range(min: f32, max: f32, rng: &mut impl MyRng) -> Self {
         Self {
-            x: random_f32_from_range(min, max),
-            y: random_f32_from_range(min, max),
-            z: random_f32_from_range(min, max),
+            x: rng.random_f32_from_range(min, max),
+            y: rng.random_f32_from_range(min, max),
+            z: rng.random_f32_from_range(min, max),
         }
     }
 
     #[inline(always)]
-    pub fn random_in_unit_sphere() -> Self {
-        let mut candidate = Self::random_in_range(-1.0, 1.0);
+    pub fn random_in_unit_sphere(rng: &mut impl MyRng) -> Self {
+        let mut candidate = Self::random_in_range(-1.0, 1.0, rng);
         while candidate.length_squared() >= 1.0 {
-            candidate = Self::random_in_range(-1.0, 1.0);
+            candidate = Self::random_in_range(-1.0, 1.0, rng);
         }
         candidate
     }
 
     #[inline(always)]
-    pub fn random_on_unit_sphere() -> Self {
-        Self::random_in_unit_sphere().unit()
+    pub fn random_on_unit_sphere(rng: &mut impl MyRng) -> Self {
+        Self::random_in_unit_sphere(rng).unit()
     }
 
     #[inline(always)]
