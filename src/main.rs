@@ -1,5 +1,6 @@
 use std::error::Error;
 
+use cpu_time::ProcessTime;
 use render::Color;
 use scene::Material;
 
@@ -32,7 +33,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     scene.add_sphere(geo::Vec3::of(-1.0, 0.0, -1.0), -0.4, material_left);
     scene.add_sphere(geo::Vec3::of(1.0, 0.0, -1.0), 0.5, material_right);
 
+    let start = ProcessTime::now();
     render::render(&render::Camera::default(), &scene, &mut img);
+    println!("Raytracing took {:?}ms of cpu time.", start.elapsed().as_millis());
 
     img.write_to_display_process()?;
     Ok(())
