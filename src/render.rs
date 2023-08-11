@@ -66,10 +66,7 @@ pub fn render(camera: &Camera, scene: &Scene, img: &mut Image) {
     let process_row = move |col_skip: usize, img: &mut Image| {
         let mut rng = MySmallRng::new();
 
-        for y in 0..img.height {
-            if y % N_THREADS != col_skip {
-                continue;
-            }
+        for y in (col_skip..img.height).step_by(N_THREADS) {
             for x in 0..img.width {
                 let mut color = Vec3::zero();
 
