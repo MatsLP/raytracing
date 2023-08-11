@@ -1,7 +1,9 @@
 use std::{
-    io::{Write},
+    error::Error,
+    fmt::Display,
+    io::Write,
     process::{Command, Stdio},
-    thread::{self, ScopedJoinHandle}, error::Error, fmt::Display,
+    thread::{self, ScopedJoinHandle},
 };
 
 use crate::{
@@ -94,7 +96,8 @@ pub fn render(camera: &Camera, scene: &Scene, img: &mut Image) {
                 }));
             }
             for join_handle in threads {
-                let computed_partial_img = join_handle.join().expect("These threads can not panic.");
+                let computed_partial_img =
+                    join_handle.join().expect("These threads can not panic.");
                 img.add(&computed_partial_img);
             }
         });
@@ -199,9 +202,7 @@ impl Image {
     }
 
     pub fn write_to_display_process(&self) -> Result<(), SubprocessError> {
-        let mut cmd = Command::new("display")
-            .stdin(Stdio::piped())
-            .spawn()?;
+        let mut cmd = Command::new("display").stdin(Stdio::piped()).spawn()?;
         {
             let mut stdin = cmd.stdin.take().expect("stdin is configured");
 
@@ -223,14 +224,15 @@ impl Image {
 
 impl From<std::io::Error> for SubprocessError {
     fn from(value: std::io::Error) -> Self {
-        Self { cause: Box::new(value) }
+        Self {
+            cause: Box::new(value),
+        }
     }
 }
 
-
 #[derive(Debug)]
 pub struct SubprocessError {
-    cause: Box<dyn Error + 'static>
+    cause: Box<dyn Error + 'static>,
 }
 
 impl Error for SubprocessError {

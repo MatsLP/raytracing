@@ -19,8 +19,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let material_center = Material::Lambertian {
         albedo: Color::of(0.1, 0.2, 0.5),
     };
-    let material_left = Material::Dieletric { 
-        index_of_refraction: 1.5
+    let material_left = Material::Dieletric {
+        index_of_refraction: 1.5,
     };
     let material_right = Material::Metal {
         albedo: Color::of(0.8, 0.6, 0.2),
@@ -35,7 +35,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let start = ProcessTime::now();
     render::render(&render::Camera::default(), &scene, &mut img);
-    println!("Raytracing took {:?}ms of cpu time.", start.elapsed().as_millis());
+    println!(
+        "Raytracing took {:?}ms of cpu time.",
+        start.elapsed().as_millis()
+    );
 
     img.write_to_display_process()?;
     Ok(())

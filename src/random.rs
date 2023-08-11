@@ -1,7 +1,7 @@
-use rand::{rngs::SmallRng, SeedableRng, Rng};
+use rand::{rngs::SmallRng, Rng, SeedableRng};
 
 pub struct MySmallRng {
-    rng: SmallRng
+    rng: SmallRng,
 }
 
 pub trait MyRng {
@@ -11,7 +11,7 @@ pub trait MyRng {
 }
 
 impl MyRng for MySmallRng {
-    fn random_f32(&mut self) -> f32{
+    fn random_f32(&mut self) -> f32 {
         self.rng.gen::<f32>()
     }
 
@@ -23,7 +23,7 @@ impl MyRng for MySmallRng {
 impl MySmallRng {
     pub fn new() -> Self {
         Self {
-            rng: SmallRng::from_entropy()
+            rng: SmallRng::from_entropy(),
         }
     }
 }

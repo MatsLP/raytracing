@@ -105,7 +105,6 @@ impl Vec3 {
 }
 
 impl ops::AddAssign<Vec3> for Vec3 {
-
     #[inline(always)]
     fn add_assign(&mut self, rhs: Vec3) {
         self.x += rhs.x;
@@ -141,7 +140,6 @@ impl ops::Neg for &Vec3 {
 }
 
 impl ops::MulAssign<f32> for Vec3 {
-
     #[inline(always)]
     fn mul_assign(&mut self, rhs: f32) {
         self.x *= rhs;
@@ -151,7 +149,6 @@ impl ops::MulAssign<f32> for Vec3 {
 }
 
 impl ops::DivAssign<f32> for Vec3 {
-
     #[inline(always)]
     fn div_assign(&mut self, rhs: f32) {
         self.x /= rhs;

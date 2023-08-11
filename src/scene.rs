@@ -1,6 +1,7 @@
 use crate::{
     geo::Vec3,
-    render::{Color, Ray}, random::MyRng,
+    random::MyRng,
+    render::{Color, Ray},
 };
 
 pub struct Scene {
@@ -53,7 +54,12 @@ pub enum Material {
 }
 
 impl Material {
-    fn scatter(&self, ray_in: &Ray, hit_record: &HitRecord, rng: &mut impl MyRng) -> Option<ScatterResult> {
+    fn scatter(
+        &self,
+        ray_in: &Ray,
+        hit_record: &HitRecord,
+        rng: &mut impl MyRng,
+    ) -> Option<ScatterResult> {
         match self {
             Self::Lambertian { albedo } => {
                 let mut scatter_direction = hit_record.normal + Vec3::random_on_unit_sphere(rng);
@@ -85,15 +91,15 @@ impl Material {
                     None
                 }
             }
-            Self::Dieletric { index_of_refraction } => {
+            Self::Dieletric {
+                index_of_refraction,
+            } => {
                 let refraction_ratio = match hit_record.face {
                     FACE::FRONT => 1.0 / index_of_refraction,
                     FACE::BACK => *index_of_refraction,
                 };
                 let unit_direction = ray_in.dir.unit();
-                let cos_theta = (-unit_direction)
-                    .dot(&hit_record.normal)
-                    .min(1.0);
+                let cos_theta = (-unit_direction).dot(&hit_record.normal).min(1.0);
                 let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
                 let dir = if refraction_ratio * sin_theta > 1.0 {
                     unit_direction.reflect(&hit_record.normal)
@@ -101,8 +107,14 @@ impl Material {
                     unit_direction.refract(&hit_record.normal, refraction_ratio)
                 };
 
-                let ray_out = Ray {base: hit_record.p, dir};
-                Some(ScatterResult { ray_out, attenuation: Color::of(1.0, 1.0, 1.0) })
+                let ray_out = Ray {
+                    base: hit_record.p,
+                    dir,
+                };
+                Some(ScatterResult {
+                    ray_out,
+                    attenuation: Color::of(1.0, 1.0, 1.0),
+                })
             }
         }
     }
