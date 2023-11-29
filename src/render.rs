@@ -165,39 +165,6 @@ impl Image {
         }
     }
 
-    pub fn test_image() -> Self {
-        let width = 256;
-        let height = 256;
-        let data: Vec<Color> = vec![Color::of(0.0, 0.0, 0.0,); width * height];
-        let mut img = Image {
-            width,
-            height,
-            data,
-            samples_per_pixel: 100, // HACK
-        };
-        for y in 0..height {
-            eprintln!("lines remaining: {}", height - y);
-            for x in 0..width {
-                let r = y as f32 / (width - 1) as f32;
-                let g = x as f32 / (height - 1) as f32;
-                let b = 0.25 as f32;
-                *img.get_mut(x, y).unwrap() = Color::of(r, g, b);
-            }
-        }
-        img
-    }
-
-    pub fn write_as_ppm_to_stdout(&self, samples_per_pixel: i32) {
-        println!("P3\n{w}\n{h}\n255\n", w = self.width, h = self.height);
-
-        for y in 0..self.height {
-            for x in 0..self.width {
-                let c = self.get(x, y).unwrap();
-                println!("{}", c.ppm_string(samples_per_pixel));
-            }
-        }
-    }
-
     pub fn write_to_display_process(&self) -> Result<(), SubprocessError> {
         let mut cmd = Command::new("display").stdin(Stdio::piped()).spawn()?;
         {
@@ -239,7 +206,7 @@ impl Error for SubprocessError {
 }
 
 impl Display for SubprocessError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         todo!()
     }
 }
