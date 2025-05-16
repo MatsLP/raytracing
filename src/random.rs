@@ -12,7 +12,7 @@ pub trait MyRng {
 
 impl MyRng for MySmallRng {
     fn random_f32(&mut self) -> f32 {
-        self.rng.gen::<f32>()
+        self.rng.random::<f32>()
     }
 
     fn random_f32_from_range(&mut self, min: f32, max: f32) -> f32 {
@@ -23,7 +23,7 @@ impl MyRng for MySmallRng {
 impl MySmallRng {
     pub fn new() -> Self {
         Self {
-            rng: SmallRng::from_entropy(),
+            rng: SmallRng::from_os_rng(),
         }
     }
 }
